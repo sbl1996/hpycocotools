@@ -57,7 +57,7 @@ class COCOeval:
     # Data, paper, and tutorials available at:  http://mscoco.org/
     # Code written by Piotr Dollar and Tsung-Yi Lin, 2015.
     # Licensed under the Simplified BSD License [see coco/license.txt]
-    def __init__(self, cocoGt=None, cocoDt=None, iouType='segm', verbose=True):
+    def __init__(self, cocoGt=None, cocoDt=None, iouType='segm', pAreaRng=None, verbose=True):
         '''
         Initialize CocoEval using coco APIs for gt and dt
         :param cocoGt: coco object with ground truth annotations
@@ -73,6 +73,8 @@ class COCOeval:
         self._gts = defaultdict(list)       # gt for evaluation
         self._dts = defaultdict(list)       # dt for evaluation
         self.params = Params(iouType=iouType) # parameters
+        self.params.areaRng = pAreaRng
+        self.areaKey = 'parea' if pAreaRng else 'area'
         self._paramsEval = {}               # parameters for evaluation
         self.stats = []                     # result summarization
         self.ious = {}                      # ious between all gts and dts
@@ -251,7 +253,7 @@ class COCOeval:
             return None
 
         for g in gt:
-            if g['ignore'] or (g['area']<aRng[0] or g['area']>aRng[1]):
+            if g['ignore'] or (g[self.areaKey]<aRng[0] or g[self.areaKey]>aRng[1]):
                 g['_ignore'] = 1
             else:
                 g['_ignore'] = 0
@@ -298,7 +300,7 @@ class COCOeval:
                     dtm[tind,dind]  = gt[m]['id']
                     gtm[tind,m]     = d['id']
         # set unmatched detections outside of area range to ignore
-        a = np.array([d['area']<aRng[0] or d['area']>aRng[1] for d in dt]).reshape((1, len(dt)))
+        a = np.array([d[self.areaKey]<aRng[0] or d[self.areaKey]>aRng[1] for d in dt]).reshape((1, len(dt)))
         dtIg = np.logical_or(dtIg, np.logical_and(dtm==0, np.repeat(a,T,0)))
         # store results for given image and category
         return {
