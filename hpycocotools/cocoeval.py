@@ -73,8 +73,10 @@ class COCOeval:
         self._gts = defaultdict(list)       # gt for evaluation
         self._dts = defaultdict(list)       # dt for evaluation
         self.params = Params(iouType=iouType) # parameters
-        self.params.areaRng = pAreaRng
-        self.areaKey = 'parea' if pAreaRng else 'area'
+        self.areaKey = 'area'
+        if pAreaRng:
+            self.params.areaRng = pAreaRng
+            self.areaKey = 'parea'
         self._paramsEval = {}               # parameters for evaluation
         self.stats = []                     # result summarization
         self.ious = {}                      # ious between all gts and dts
