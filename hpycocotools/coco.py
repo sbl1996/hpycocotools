@@ -69,7 +69,7 @@ def _isArrayLike(obj):
 
 
 class COCO:
-    def __init__(self, annotation_file=None, verbose=True, use_percent=True):
+    def __init__(self, annotation_file=None, verbose=True):
         """
         Constructor of Microsoft COCO helper class for reading and visualizing annotations.
         :param annotation_file (str): location of annotation file
@@ -80,7 +80,6 @@ class COCO:
         self.dataset, self.anns, self.cats, self.imgs = dict(), dict(), dict(), dict()
         self.imgToAnns, self.catToImgs = defaultdict(list), defaultdict(list)
         self.verbose = verbose
-        self.use_percent = use_percent
         if annotation_file is not None:
             if self.verbose:
                 print('loading annotations into memory...')
@@ -115,11 +114,6 @@ class COCO:
                 ianns = imgToAnns[i]
                 width = img['width']
                 height = img['height']
-                for ann in ianns:
-                    w, h = ann['bbox'][2:]
-                    w = w / width
-                    h = h / height
-                    ann['parea'] = w * h
 
         if 'categories' in self.dataset:
             for cat in self.dataset['categories']:
@@ -169,9 +163,8 @@ class COCO:
                 anns = self.dataset['annotations']
             anns = anns if len(catIds) == 0 else [ann for ann in anns if ann['category_id'] in catIds]
 
-            areaKey = 'parea' if self.use_percent else 'area'
             anns = anns if len(areaRng) == 0 else [ann for ann in anns if
-                                                   areaRng[0] < ann[areaKey] < areaRng[1]]
+                                                   areaRng[0] < ann['area'] < areaRng[1]]
 
         if iscrowd is not None:
             ids = [ann['id'] for ann in anns if ann['iscrowd'] == iscrowd]
@@ -356,11 +349,6 @@ class COCO:
                 if not 'segmentation' in ann:
                     ann['segmentation'] = [[x1, y1, x1, y2, x2, y2, x2, y1]]
                 ann['area'] = bb[2] * bb[3]
-                if self.use_percent:
-                    img = self.imgs[ann['image_id']]
-                    width = img['width']
-                    height = img['height']
-                    ann['parea'] = ann['area'] / (width * height)
                 ann['id'] = id + 1
                 ann['iscrowd'] = 0
         elif 'segmentation' in anns[0]:
